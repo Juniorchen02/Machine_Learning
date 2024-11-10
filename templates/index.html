@@ -1,0 +1,158 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi Hewan</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        img {
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+        }
+
+        .upload-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .upload-btn:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="file"] {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .preview {
+            margin-top: 20px;
+            max-width: 100%;
+            max-height: 300px;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .info-text {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .history-link {
+            margin-top: 20px;
+            font-size: 16px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .history-link:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Gambar Hewan untuk Deteksi</h1>
+        
+        <!-- Image Preview Section -->
+        <img id="imagePreview" class="preview" src="" alt="Preview" style="display: none;">
+
+        <form action="/" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*" required onchange="previewImage(event)">
+            <br><br>
+            <input type="submit" value="Deteksi" class="upload-btn" onclick="saveHistory()">
+        </form>
+        
+        <p class="info-text">Pastikan gambar yang diunggah adalah gambar hewan seperti kucing atau anjing.</p>
+        
+        <div class="footer">
+            <p>&copy; 2024 Pet Detection</p>
+        </div>
+
+        <!-- Link to History Page -->
+        <a href="{{ url_for('history') }}" class="history-link">Lihat Riwayat Deteksi</a>
+    </div>
+
+    <script>
+        // Load history from local storage
+        window.onload = function() {
+            loadHistory();
+        };
+    
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                var image = document.getElementById('imagePreview');
+                image.src = reader.result;
+                image.style.display = 'block';  // Make the image visible after loading
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    
+        // Save the history to local storage and update the history display
+        function saveHistory() {
+            var imageSrc = document.getElementById('imagePreview').src;
+            
+            if (imageSrc) {
+                var history = JSON.parse(localStorage.getItem('history')) || [];
+                
+                // Menambahkan gambar, hasil, dan akurasi ke dalam history
+                history.push({ image: imageSrc });
+        
+                // Menyimpan riwayat yang telah diperbarui ke localStorage
+                localStorage.setItem('history', JSON.stringify(history));
+            }
+        }         
+    </script>    
+</body>
+</html>

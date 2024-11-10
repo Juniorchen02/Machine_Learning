@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Deteksi Hewan</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .history-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .history-item {
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .history-item img {
+            max-width: 100px;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Riwayat Deteksi Hewan</h1>
+        <ul class="history-list">
+            <!-- History will be populated by JavaScript -->
+        </ul>        
+        <div class="footer">
+            <p>&copy; 2024 Pet Detection</p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            var history = JSON.parse(localStorage.getItem('history')) || [];
+            var historyList = document.querySelector('.history-list');
+            historyList.innerHTML = ''; // Clear the current list
+    
+            history.forEach(function(item, index) {
+                var listItem = document.createElement('li');
+                listItem.classList.add('history-item');
+                listItem.innerHTML = 
+                    `<img src="${item.image}" alt="Image" />
+                    <button class="delete-btn" onclick="deleteHistoryItem(${index})">Hapus</button>`;
+                historyList.appendChild(listItem);
+            });
+        };
+    
+        function deleteHistoryItem(index) {
+            var history = JSON.parse(localStorage.getItem('history')) || [];
+            history.splice(index, 1); // Remove the item at the given index
+            localStorage.setItem('history', JSON.stringify(history)); // Save the updated history
+            window.location.reload(); // Reload the page to update the list
+        }
+    </script>    
+</body>
+</html>
