@@ -4,9 +4,13 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 import numpy as np
 import os
+import base64
+from io import BytesIO
+from PIL import Image
 
 # Membuat instance Flask untuk aplikasi web
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
 # Memuat model terlatih dari file 'animal_detector.h5'
 model = load_model('model/animal_detector.h5')
@@ -14,44 +18,51 @@ model = load_model('model/animal_detector.h5')
 # Memuat informasi label untuk klasifikasi (cats dan dogs)
 class_indices = {0: 'cats', 1: 'dogs'}  # Mendefinisikan kelas langsung jika model hanya memiliki 2 kelas
 
-# Route utama yang menangani permintaan GET dan POST
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == 'POST': # Jika metode request adalah POST (form dikirimkan)
-        # Mengecek apakah file gambar ada dalam form
-        if 'file' not in request.files:
-            return redirect(request.url) # Jika tidak ada file, kembali ke halaman utama
-        file = request.files['file']
-        if file.filename == '': # Jika tidak ada file yang dipilih
+    if request.method == 'POST':
+        if 'file' in request.files and request.files['file'].filename != '':
+            file = request.files['file']
+            filepath = os.path.join('static', file.filename)
+            file.save(filepath)
+            image = load_img(filepath, target_size=(128, 128))
+            image = image.convert('RGB')
+            image_path = file.filename
+
+        elif 'imageData' in request.form:
+            # Decode the image data from the camera
+            image_data = request.form['imageData']
+            image_data = base64.b64decode(image_data.split(',')[1])
+            image = Image.open(BytesIO(image_data)).resize((128, 128))
+            image = image.convert('RGB')
+            
+            # Save the image from camera to 'static' directory
+            image_path = "camera_capture.png"
+            image.save(os.path.join('static', image_path))
+
+        else:
             return redirect(request.url)
-        if file: # Jika file ada
-            filepath = os.path.join('static', file.filename) # Menentukan path penyimpanan file di folder 'static'
-            file.save(filepath) # Menyimpan file gambar ke dalam folder 'static'
 
-            # Proses preprocessing gambar agar siap untuk prediksi
-            image = load_img(filepath, target_size=(128, 128))   # Mengubah ukuran gambar menjadi (128, 128)
-            image = img_to_array(image) # Mengubah gambar menjadi array NumPy
-            image = np.expand_dims(image, axis=0) / 255.0 # Menambahkan dimensi baru dan menormalisasi nilai gambar
+        image = img_to_array(image)
+        image = np.expand_dims(image, axis=0) / 255.0
 
-            # Melakukan prediksi menggunakan model yang telah diload
-            preds = model.predict(image)  # Menggunakan model untuk memprediksi gambar
-            pred_class = np.argmax(preds, axis=1)[0]  # Mendapatkan kelas dengan probabilitas tertinggi
-            pred_label = class_indices[pred_class]  # Menentukan label kelas berdasarkan index yang diprediksi
+        preds = model.predict(image)
+        pred_class = np.argmax(preds, axis=1)[0]
+        pred_label = class_indices[pred_class]
 
-            # Menghitung probabilitas untuk kedua kelas (kucing dan anjing)
-            cat_prob = preds[0][0] * 100  # Probabilitas untuk kelas kucing
-            dog_prob = preds[0][1] * 100  # Probabilitas untuk kelas anjing
+        cat_prob = preds[0][0] * 100
+        dog_prob = preds[0][1] * 100
 
-            # Menyimpan hasil deteksi dan akurasi prediksi
-            result = pred_label  # Menyimpan hasil prediksi ('cats' atau 'dogs')
-            accuracy = cat_prob if result == 'cats' else dog_prob  # Akurasi berdasarkan kelas yang terdeteksi
+        return render_template(
+            'result.html',
+            label=pred_label,
+            image=image_path,
+            cat_prob=cat_prob,
+            dog_prob=dog_prob
+        )
 
-            # Mengirimkan hasil prediksi ke halaman hasil
-            return render_template('result.html', label=pred_label, 
-                                   image=file.filename, cat_prob=cat_prob, dog_prob=dog_prob,
-                                   pred_label=pred_label, accuracy=accuracy)  # Mengirimkan hasil ke halaman result.html
+    return render_template('index.html')
 
-    return render_template('index.html') # Mengembalikan halaman utama untuk GET request
 
 # Route untuk melihat riwayat (history) hasil prediksi
 @app.route('/history', methods=['GET'])

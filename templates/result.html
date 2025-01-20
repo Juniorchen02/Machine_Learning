@@ -80,17 +80,17 @@
         }
     </style>
 </head>
+<!-- result.html -->
 <body>
     <div class="container">
         <h1>Hasil Deteksi: {{ label }}</h1>
         <img src="{{ url_for('static', filename=image) }}" alt="Gambar Hewan">
-        
+
         <h3>Probabilitas:</h3>
         <p><span class="probability">Kucing:</span> {{ cat_prob }}%</p>
         <p><span class="probability">Anjing:</span> {{ dog_prob }}%</p>
 
         <a href="{{ url_for('index') }}" class="btn">Deteksi Gambar Lain</a>
-
         <div class="footer">
             <p>&copy; 2024 Pet Detection</p>
         </div>

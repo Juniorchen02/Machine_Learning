@@ -98,6 +98,26 @@
         .history-link:hover {
             color: #0056b3;
         }
+        
+        #cameraView, #imagePreview {
+            display: none;
+            width: 100%;
+            border-radius: 10px;
+        }
+        .capture-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .capture-btn:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -111,6 +131,16 @@
             <input type="file" name="file" accept="image/*" required onchange="previewImage(event)">
             <br><br>
             <input type="submit" value="Deteksi" class="upload-btn" onclick="saveHistory()">
+        </form>
+
+        <!-- Camera capture section -->
+        <button class="capture-btn" onclick="openCamera()">Gunakan Kamera</button>
+        <video id="cameraView" autoplay playsinline></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+                
+        <form id="cameraForm" action="/" method="post" style="display:none;">
+            <input type="hidden" name="imageData" id="imageData">
+            <button type="submit" class="upload-btn">Deteksi Gambar dari Kamera</button>
         </form>
         
         <p class="info-text">Pastikan gambar yang diunggah adalah gambar hewan seperti kucing atau anjing.</p>
@@ -138,6 +168,36 @@
             }
             reader.readAsDataURL(event.target.files[0]);
         }
+
+        function openCamera() {
+            const video = document.getElementById('cameraView');
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    document.getElementById('cameraForm').style.display = 'block';
+                })
+                .catch(err => {
+                    console.error("Error accessing camera: ", err);
+                    alert("Camera access failed. Please check browser permissions.");
+                });
+        }
+
+        document.getElementById('cameraForm').onsubmit = function (event) {
+            event.preventDefault();
+            const video = document.getElementById('cameraView');
+            const canvas = document.getElementById('cameraCanvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+            const imageDataURL = canvas.toDataURL('image/png');
+            document.getElementById('imageData').value = imageDataURL;
+    
+            video.srcObject.getTracks().forEach(track => track.stop());
+    
+            this.submit();
+        };
     
         // Save the history to local storage and update the history display
         function saveHistory() {
